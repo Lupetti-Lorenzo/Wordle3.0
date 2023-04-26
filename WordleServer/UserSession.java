@@ -1,4 +1,4 @@
-package WordleServer;
+
 
 public class UserSession {
     public static final int MAX_TRIES = 12; // massimo numero di prove di parole che posso fare

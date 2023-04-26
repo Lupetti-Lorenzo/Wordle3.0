@@ -1,4 +1,3 @@
-package WordleServer;
 
 import java.io.*;
 import java.text.DateFormat;

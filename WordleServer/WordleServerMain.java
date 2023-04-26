@@ -1,4 +1,4 @@
-package WordleServer;
+
 
 import java.io.*;
 import java.net.MulticastSocket;
