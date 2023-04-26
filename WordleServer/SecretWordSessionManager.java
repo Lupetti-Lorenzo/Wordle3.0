@@ -1,3 +1,6 @@
+package WordleServer;
+
+import java.io.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -7,7 +10,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class SecretWordSessionManager extends Thread {
-    private final List<String> parole;
     private final ScheduledExecutorService executor;
     private final SecretWordSession session; // sessione corrente
     public static int wordDuration; // durata della sessione in secondi
@@ -16,19 +18,44 @@ public class SecretWordSessionManager extends Thread {
     private static final String YELLOW_BACKGROUND = "\u001B[43m";
     private static final String ANSI_END = "\u001B[0m";
 
-    public SecretWordSessionManager(List<String> parole, int seconds) {
+    public SecretWordSessionManager(int seconds) {
         session = new SecretWordSession();
-        this.parole = parole;
         wordDuration = seconds;
         // ogni tot secondi parte e cambia la secretword, sersessionmap e activewordtime initialDelay = 0 almeno parte anche subito
         executor = Executors.newSingleThreadScheduledExecutor();
-        executor.scheduleAtFixedRate(new SecretWordChanger(parole, session), 0, wordDuration, TimeUnit.SECONDS);
+        executor.scheduleAtFixedRate(new SecretWordChanger(session), 0, wordDuration, TimeUnit.SECONDS);
     }
 
     // usata per sapere se una parola è valida
     public boolean wordExists(String word) {
-        return this.parole.contains(word);
+        try (final RandomAccessFile words = new RandomAccessFile("words.txt", "r")) {
+            long start = 0;
+            long end = words.length();
+            String wordRidden;
+            while (start <= end) {
+                long mid = ((start + end) / 2);
+                mid = mid - mid % 11;
+                words.seek(mid);
+                wordRidden = words.readLine();
+                //System.out.println(wordRidden);
+                if (wordRidden.compareTo(word) == 0)
+                    return true;
+                else if (wordRidden.compareTo(word) < 0)
+                    start = mid + 10;
+                else
+                    end = mid - 10;
+            }
+            return false;
+        } catch (FileNotFoundException e) {
+            System.out.println("[SERVER] Errore nell'analisi del file delle parole: file non trovato.\n" + e.getMessage());
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            System.out.println("[SERVER] Errore nell'analisi del file delle parole.\n" + e.getMessage());
+            throw new RuntimeException(e);
+        }
     }
+
+
 
     // funzione prende la parola da provare,
     // restituisce la parola colorata in base alla parola segreta
@@ -104,30 +131,28 @@ public class SecretWordSessionManager extends Thread {
 
     public String getWordDurationDate() { return this.session.wordDurationDate.toString(); }
 
-    public void stopSWSM() { // usata dal ServerTerminationHandler per chiudere questo thread
+    // usata dal ServerTerminationHandler per chiudere questo thread che cambia parole ogni tot tempo
+    public void stopSWSM() {
         executor.shutdown();
         try {
             if (!executor.awaitTermination(2000, TimeUnit.MILLISECONDS))
                 executor.shutdownNow();
         }
         catch (InterruptedException e) {executor.shutdownNow();}
-        System.out.println("[SERVER] SecretWordSessionManager terminato");
+        System.out.println("[SERVER] SecretWordSessionManager terminato.");
     }
 
     // thread che cambia la parola segreta ogni tot tempo
     private static class SecretWordChanger extends Thread {
-        private final List<String> parole; // lista di parole da dove prendere la nuova secretword
         private final SecretWordSession session;
-        public SecretWordChanger(List<String> parole, SecretWordSession session) {
-            this.parole = parole;
+        public SecretWordChanger(SecretWordSession session) {
             this.session = session;
         }
 
         @Override
         public void run() {
-            int rand = (int) ((Math.random() * this.parole.size()) + 1); // indice dell'array delle parole random
             // nuova parola
-            session.secretWord = new StringBuilder(parole.get(rand));
+            session.secretWord = new StringBuilder(getRandomWord());
             // nuova sessione di utenti
             session.usersSessionMap = new ConcurrentHashMap<>();
             // nuovo identificativo della parola, il range di tempo espresso in datainizio-datafine
@@ -140,6 +165,21 @@ public class SecretWordSessionManager extends Thread {
             calendar.add(Calendar.SECOND, wordDuration); // data fine parola segreta (data di adesso + durata)
             session.wordDurationDate.append(df.format(today)).append(" - ").append(df.format(calendar.getTime()));
             System.out.println("[SERVER] Nuova parola: " + session.secretWord + ", durerà " +  session.wordDurationDate);
+        }
+
+        private static String getRandomWord() {
+            try {
+                RandomAccessFile words = new RandomAccessFile("words.txt", "r");
+                long random = (long) (Math.random() * words.length());
+                random = random - random % 11;
+                words.seek(random);
+                String secretWord = words.readLine();
+                words.close();
+                return secretWord;
+            } catch (IOException e) {
+                System.out.println("[SERVER] Errore nell'analisi del file delle parole");
+                throw new RuntimeException(e);
+            }
         }
     }
 }

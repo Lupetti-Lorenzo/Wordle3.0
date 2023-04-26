@@ -1,3 +1,5 @@
+package WordleServer;
+
 import java.util.concurrent.ConcurrentHashMap;
 
 public class SecretWordSession { // rappresenta la sessione specifica a una parola, quindi ha la parola segreta, la durata della sessione in data e la lista di utenti che hanno/stanno giocando

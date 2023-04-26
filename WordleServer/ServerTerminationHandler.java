@@ -1,3 +1,5 @@
+package WordleServer;
+
 import java.io.IOException;
 import java.net.MulticastSocket;
 import java.net.ServerSocket;
@@ -25,10 +27,14 @@ public class ServerTerminationHandler extends Thread {
         System.out.println("[SERVER] Avvio terminazione...");
         // Chiudo la ServerSocket in modo tale da non accettare piu' nuove richieste.
         try { // se esiste e non è gia stata chiusa la chiudo
-            if (serverSocket != null && !serverSocket.isClosed())
+            if (serverSocket != null && !serverSocket.isClosed()) {
                 serverSocket.close();
-            if (ms != null && !ms.isClosed())
+                System.out.println("[SERVER] Server terminato.");
+            }
+            if (ms != null && !ms.isClosed()) {
                 ms.close();
+                System.out.println("[SERVER] Multicast terminato.");
+            }
         }
         catch (IOException e) {
             System.err.printf("[SERVER] Errore nella chiusura del socket del server: %s\n", e.getMessage());
@@ -42,6 +48,6 @@ public class ServerTerminationHandler extends Thread {
         catch (InterruptedException e) {pool.shutdownNow();}
         // chiudo anche il sessionMenager
         sessionMenager.stopSWSM();
-        System.out.println("[SERVER] Terminato.");
+        System.out.println("[SERVER] Programma terminato con successo!");
     }
 }

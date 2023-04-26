@@ -1,3 +1,5 @@
+package WordleServer;
+
 import java.io.*;
 import java.net.MulticastSocket;
 import java.net.ServerSocket;
@@ -9,8 +11,7 @@ public class WordleServerMain {
     public static final String configFile = "./server.properties";
     // Hasmap contente i dati degli utenti che tengo nel file json
     public static HashMap<String, UserData> usersMap = new HashMap<>();
-    // Lista di ogni parola di lunghezza 10 inglese, creata leggendo dal file words.txt
-    public static List<String> parole = new ArrayList<>();
+
     // Parametri di configurazione - porta sul quale il server sta in ascolto, indirizzo e porta del multicast e la durata di una parola segreta(in secondi)
     public static int SERVERPORT;
     public static int PORTAMULTICAST;
@@ -28,29 +29,16 @@ public class WordleServerMain {
         usersMap = UsersDataJsonWriter.getINSTANCE().readJsonMap();
         if (usersMap == null) usersMap = new HashMap<>();
 
-        //leggo il file delle parole e lo salvo nella lista, per poi lavorare con quella invece di accedere al file ogni volta
-        try {
-            File file = new File("./words.txt");
-            Scanner scanner = new Scanner(file);
-            while (scanner.hasNextLine())  {
-                String line = scanner.nextLine();
-                parole.add(line);
-            }
-        } catch(FileNotFoundException e) {
-            System.out.println("[SERVER] Errore nell'analisi del file delle parole");
-            return;
-        }
-
         // parte il SecretWordSessionManager
         // oggetto per interagire con la sessione che passo ai ClientHandlers e al sessionManager
-        SecretWordSessionManager wordSessionManager = new SecretWordSessionManager(parole, WORDDURATION);
+        SecretWordSessionManager wordSessionManager = new SecretWordSessionManager(WORDDURATION);
 
         //faccio partire il server - thread pool per gestire piu client contemporaneamente
         try (ServerSocket server = new ServerSocket(SERVERPORT)) {
             // Apro il socket verso il canale multicast
             MulticastSocket ms = new MulticastSocket();
             // pool di thread per gestire gli utenti
-            ExecutorService pool = Executors.newFixedThreadPool(20);
+            ExecutorService pool = Executors.newCachedThreadPool();
             System.out.println("[SERVER] WordleServer started on port " + SERVERPORT);
             // registro il termination handler per il server, in modo da chiudere anche threadpool e wordsessionmenager
             Runtime.getRuntime().addShutdownHook(new ServerTerminationHandler(2000, pool, server, wordSessionManager, ms));

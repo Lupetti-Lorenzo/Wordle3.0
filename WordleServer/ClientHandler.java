@@ -1,3 +1,5 @@
+package WordleServer;
+
 import java.io.*;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
@@ -83,12 +85,12 @@ public class ClientHandler implements Runnable {
 
 
     private boolean sendWord() {
-        // prima di tutto il server mi dice se posso mandare la parola
+        // prima di tutto il server dice al client se può mandare la parola
         if (userData == null || sessionManager.getUserSession(userData.username) == null) {
-            out.println("1"); // la parola è cambiata nel corso della sessione
+            out.println("1"); // la parola è cambiata nel corso della sessione, sessione cambiata mentre inviava parole
             return false;
-        }// sessione cambiata mentre inviava parole
-        if (userSession.hasFinished()) {
+        }
+        if (userSession.hasFinished()) { // ha finito per questa parola
             out.println("2"); // non puoi piu mandare parole
             return false;
         } else out.println("0"); // gli dico che puo inviare
@@ -102,7 +104,7 @@ public class ClientHandler implements Runnable {
             out.println("noWord");
         } else if (sessionManager.isSecretWord(tryWord)) { // la parola esiste ed è proprio la secret word
             out.println("secretWord"); // comunico l'esito al client
-            out.println(this.userSession.nextHint(sessionManager.getWordHint(tryWord))); // aggiorno gli hints della parola e li mando all'utente
+            out.println(this.userSession.nextHint(sessionManager.getWordHint(tryWord))); // aggiorno gli hints della parola e li mando all'utente (output finale con tutto verde)
             this.userSession.nexHintBG(sessionManager.getWordHintBG(tryWord)); // aggiorno il messaggio di notifica
             userSession.addWordCount();
             userSession.setWinner(true);
