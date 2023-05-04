@@ -1,5 +1,4 @@
 
-
 import java.io.IOException;
 import java.net.MulticastSocket;
 import java.net.ServerSocket;
@@ -29,7 +28,7 @@ public class ServerTerminationHandler extends Thread {
         try { // se esiste e non è gia stata chiusa la chiudo
             if (serverSocket != null && !serverSocket.isClosed()) {
                 serverSocket.close();
-                System.out.println("[SERVER] Server terminato.");
+                System.out.println("[SERVER] Socket chiuso.");
             }
             if (ms != null && !ms.isClosed()) {
                 ms.close();

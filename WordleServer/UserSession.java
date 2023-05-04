@@ -1,5 +1,3 @@
-
-
 public class UserSession {
     public static final int MAX_TRIES = 12; // massimo numero di prove di parole che posso fare
     private int wordCount; //numero di parole provate
@@ -42,6 +40,10 @@ public class UserSession {
         return this.hints.toString(); // ritorno solo il valore
     }
 
+    public StringBuilder getHints() {
+        return hints;
+    }
+
     // aggiorno gli hints senza le lettere, solo background e _ per le notifiche
     public void nexHintBG(String hintsbg) {
         this.hintsBG.append(hintsbg).append("\n");
@@ -66,6 +68,9 @@ public class UserSession {
         return this.win;
     }
 
+    public int getTriesLeft() {
+        return MAX_TRIES - this.getWordCount();
+    }
 
 
 }

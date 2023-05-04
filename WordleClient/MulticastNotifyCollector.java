@@ -1,16 +1,16 @@
 import java.io.IOException;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
+import java.util.Queue;
 
 // thread lanciato in parallelo dal client per rimanere in ascolto di eventuali notifiche dagli altri giocatori
 public class MulticastNotifyCollector extends Thread {
     public static String MUL_ADDR;
     public static int MUL_PORT;
-    List<String> notifiche; // lista di notifiche passata per riferimento dal client da modificare ogni volta che ne arriva una nuova
+    Queue<String> notifiche; // lista di notifiche passata per riferimento dal client da modificare ogni volta che ne arriva una nuova
     String username; // usato per vedere se il messaggio è quello di terminazione o il suo
 
-    public MulticastNotifyCollector(List<String> notifiche, String username, String address, int port) {
+    public MulticastNotifyCollector(Queue<String> notifiche, String username, String address, int port) {
         this.notifiche = notifiche;
         this.username = username;
         MUL_ADDR = address;
@@ -62,10 +62,9 @@ public class MulticastNotifyCollector extends Thread {
                 if (!ms.isClosed()) {
                     ms.leaveGroup(ia, netIf);
                     ms.close();
+                    System.out.println("Multicast chiuso correttamente");
                 }
             } catch (IOException e) { System.out.println("Errore nella chiusura del MNC: " + e.getMessage());}
         }
     }
-
-
 }

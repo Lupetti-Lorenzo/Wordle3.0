@@ -1,16 +1,16 @@
 
-
 import java.io.*;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.Socket;
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 // thread per gestire la connessione con un client
 public class ClientHandler implements Runnable {
     // mappa degli utenti registrati
-    private final HashMap<String, UserData> usersMap;
+    private final ConcurrentHashMap<String, UserData> usersMap;
     private final SecretWordSessionManager sessionManager; // per interagire con la parola segreta e quindi sapere se esiste, prendere gli hints...
     // CONNECTION DATA
     private final Socket socket;
@@ -22,7 +22,7 @@ public class ClientHandler implements Runnable {
     private UserData userData;
     private UserSession userSession;
 
-    public ClientHandler(Socket socket, HashMap<String, UserData> usersMap, SecretWordSessionManager wsManager, MulticastSocket ms) throws IOException {
+    public ClientHandler(Socket socket, ConcurrentHashMap<String, UserData> usersMap, SecretWordSessionManager wsManager, MulticastSocket ms) throws IOException {
         this.socket = socket;
         this.usersMap = usersMap;
         this.sessionManager = wsManager;
@@ -79,8 +79,12 @@ public class ClientHandler implements Runnable {
         userSession = sessionManager.getUserSession(userData.username);
         if (userSession == null) { // prima prova per questa sessione
             userSession = sessionManager.newUserSession(this.userData.username);
+            out.println("0"); // nuova sessione
         }
-        out.println("0"); //puoi iniziare
+        else {
+            // resume session, invio messaggio di 'benvenuto al gioco'
+            out.println("Ripresa della sessione, tentativi rimasti: " + userSession.getTriesLeft() + "$" + userSession.getHints().toString());
+        }
     }
 
 
@@ -97,8 +101,13 @@ public class ClientHandler implements Runnable {
 
         // leggo la parola dal client
         String tryWord = readUserInput();
+        // se e cambiata la sessione dal controllo di sopra all'input dell'utente e gli faccio stampare gli hints
+        if (userData == null || sessionManager.getUserSession(userData.username) == null) {
+            out.println("sessionExpired");
+            return false;
+        }
         if (tryWord == null) return true; // errore - chiudi il thread
-        if (tryWord.equals("EXIT")) { // se exit non fo nulla
+        if (tryWord.equalsIgnoreCase("esci")) { // se exit non fo nulla
 
         } else if (!sessionManager.wordExists(tryWord)) { // parola non esistente, mando messaggio di parola non trovata
             out.println("noWord");
@@ -121,8 +130,9 @@ public class ClientHandler implements Runnable {
             userData.partiteVinte++;
             if (userData.streakVittoreMax < userData.streakVittorie)
                 userData.streakVittoreMax = userData.streakVittorie;
-            // aggiorno il file json
+            // aggiorno il file json e la usersmap
             UsersDataJsonWriter.getINSTANCE().writeJsonMap(usersMap, userData);
+
         } else {  // parola esistente, non è la secret word, mando la hint
             // setto gli hints e li mando al client
             out.println("validWord");

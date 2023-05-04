@@ -1,5 +1,4 @@
 
-
 public class UserData { // dati che mantiene il server di ogni utente che servono per login e le statistiche, salvati in usersData.json
     public String username;
     public String password;

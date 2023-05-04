@@ -1,13 +1,15 @@
 import java.io.*;
 import java.net.Socket;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 
 public class WordleClientMain {
 
     // Percorso del file di configurazione del client
     public static final String configFile = "./client.properties";
     // Lista delle notifiche inviate dagli altri utenti
-    private static final List<String> notifiche = new ArrayList<>();
+    private static final Queue<String> notifiche = new ConcurrentLinkedQueue<String>();
     private static String username;
     private static BufferedReader keyboard; // per leggere input da tastiera dell'utente
     // background colorati per stampare messaggi di tipo diverso
@@ -41,7 +43,7 @@ public class WordleClientMain {
         System.out.println("Benvenuto a WORDLE");
         // loop principale del gioco,
         boolean exit = false;
-        while (!exit) { // loop principale dell'applicazione, che gestisce i 2 menu principali
+        while (!exit) { // loop principale dell'applicazione, che gestisce i 2 menu principali - loginRegisterLoop() e menu()
             int loginDone;
             while ((loginDone = loginRegisterLoop()) == 1); // rimango nella fase di login/register finchè non sono loggato oppure inserisce esci
             if (loginDone == -1) break; // voleva uscire, non passo alla prossima fase e chiudo la connessione
@@ -67,9 +69,9 @@ public class WordleClientMain {
     // ritorno -1 se lo user vuole uscire, 0 se login effettuato, 1 se ho fatto registrazione
     private static int loginRegisterLoop() {
         // chiedo all'utente cosa vuole fare
-        System.out.print("1) Login\n2) Registrazione\n3) Esci\nInserisci un valore tra login, registrazione e esci\n>");
+        System.out.print("1) Login\n2) Registrati\n3) Esci\nInserisci un valore tra login, registrazione e esci\n>");
         String choice = " "; boolean loopDone = false;
-        do {
+        do { // loop fino a che l'utente non inserisce una scelta valida
             try {
                 choice = keyboard.readLine();
             } catch (IOException e) {exitApplication("lettura user input fallita");} // errore - chiudo applicazione
@@ -81,7 +83,7 @@ public class WordleClientMain {
         // mando la scelta al server e chiamo le rispettive funzioni
         switch (choice) {
             case "login" -> loopDone = login();
-            case "registrazione" -> register();
+            case "registrati" -> register();
             default -> { // exit
                 out.println("exit");
                 return -1; // ritorno -1 per uscire dal gioco
@@ -148,9 +150,15 @@ public class WordleClientMain {
                 printWarning("Hai già giocato la parola corrente, riprova quando sarà cambiata!\n");
                 return false;
             }
-            // err = 0 - posso giocare, inizio a mandare parole
-            System.out.println("Puoi iniziare a mandare parole...(EXIT per uscire)");
-            return true;
+            else if (err.equals("0")) {
+                // err = 0 - nuova sessione, posso giocare
+                return true;
+            }
+            else { // ripresa della sessione, stampo il messaggio
+                System.out.println(err.replace("$", "\n"));
+                return true;
+            }
+
         } catch (IOException e) {
             exitApplication(" (playWordle) lettura risposta dal server: "+ e.getMessage());
             return false;
@@ -177,7 +185,7 @@ public class WordleClientMain {
 
             // posso inviare la parola - err = 0
             // chiedo la parola e la invio al server
-            System.out.print("Inserire la parola da provare (lunga 10) (exit per uscire): ");
+            System.out.print("Inserire la parola da provare (lunga 10) (ESCI per uscire): ");
             String word;
             try {
                 word = keyboard.readLine();
@@ -185,10 +193,14 @@ public class WordleClientMain {
 
             out.println(word);
             // se l'utente vuole uscire dall'invio delle parole
-            if (word.equalsIgnoreCase("exit")) return false;
+            if (word.equalsIgnoreCase("esci") || word.equals("0")) return false; // non mi aspetto una risposta dal server
             // risposta del server, indizio oppure parola sbagliata
             String res = in.readLine();
-            if (res.equals("noWord")) { // ho inviato una parola non esistente
+            if (res.equals("sessionExpired")) { //
+                printError("La parola segreta è cambiata nel mezzo della tua sessione, prova con quella nuova...\n");
+                return false;
+            }
+            else if (res.equals("noWord")) { // ho inviato una parola non esistente
                 printWarning("Hai inserito una parola inesistente: " + word);
                 return true;
             }
@@ -261,10 +273,10 @@ public class WordleClientMain {
         }
         System.out.println("Notifiche: ");
         // printo le notifiche
-        for (String s: notifiche) {
+        String s;
+        while ((s = notifiche.poll()) != null) {
             System.out.println(s);
         }
-        notifiche.clear(); //resetto l'array
     }
 
     // invia al server la richiesta di registrazione, manda username e password e informa l'utente dell'esito

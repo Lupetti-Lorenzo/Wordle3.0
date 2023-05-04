@@ -10033,6 +10033,7 @@ geobiology
 geobotanic
 geocentric
 geochemist
+geochronic
 geocronite
 geodesical
 geodetical
@@ -24622,6 +24623,7 @@ straitsman
 straitwork
 stramonium
 strandless
+strandward
 strangling
 strappable
 strategian
@@ -24641,7 +24643,7 @@ strawsmear
 strawstack
 streakedly
 streaklike
-streakwis
+streakwise
 streamhead
 streamless
 streamlike

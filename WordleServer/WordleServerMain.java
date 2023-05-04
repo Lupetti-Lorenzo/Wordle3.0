@@ -1,16 +1,16 @@
 
-
 import java.io.*;
 import java.net.MulticastSocket;
 import java.net.ServerSocket;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 public class WordleServerMain {
     // Percorso del file di configurazione del server.
     public static final String configFile = "./server.properties";
     // Hasmap contente i dati degli utenti che tengo nel file json
-    public static HashMap<String, UserData> usersMap = new HashMap<>();
+    public static ConcurrentHashMap<String, UserData> usersMap = new ConcurrentHashMap<>();
 
     // Parametri di configurazione - porta sul quale il server sta in ascolto, indirizzo e porta del multicast e la durata di una parola segreta(in secondi)
     public static int SERVERPORT;
@@ -27,7 +27,7 @@ public class WordleServerMain {
         }
         //all'avvio del server, deserializzo il file usersData.json e popolo la mappa con i dati degli utenti
         usersMap = UsersDataJsonWriter.getINSTANCE().readJsonMap();
-        if (usersMap == null) usersMap = new HashMap<>();
+        if (usersMap == null) usersMap = new ConcurrentHashMap<>();
 
         // parte il SecretWordSessionManager
         // oggetto per interagire con la sessione che passo ai ClientHandlers e al sessionManager

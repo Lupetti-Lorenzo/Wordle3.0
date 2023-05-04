@@ -36,7 +36,6 @@ public class SecretWordSessionManager extends Thread {
                 mid = mid - mid % 11;
                 words.seek(mid);
                 wordRidden = words.readLine();
-                //System.out.println(wordRidden);
                 if (wordRidden.compareTo(word) == 0)
                     return true;
                 else if (wordRidden.compareTo(word) < 0)
@@ -111,7 +110,7 @@ public class SecretWordSessionManager extends Thread {
 
     // rimuovi una sessione dalla mappa, usata alla logout se non ho vinto o mandato 12 parole
     public void removeUserSession(String username) {
-        session.usersSessionMap.put(username, null);
+        session.usersSessionMap.remove(username);
     }
 
     // se l'utente non nella mappa(mai entrato in questa sessione) oppure non ha finito, allora puó giocare
@@ -162,6 +161,7 @@ public class SecretWordSessionManager extends Thread {
             Calendar calendar = Calendar.getInstance(); // calcolo datafine
             calendar.setTime(today);
             calendar.add(Calendar.SECOND, wordDuration); // data fine parola segreta (data di adesso + durata)
+            // aggiorno l'intervallo formattato
             session.wordDurationDate.append(df.format(today)).append(" - ").append(df.format(calendar.getTime()));
             System.out.println("[SERVER] Nuova parola: " + session.secretWord + ", durerà " +  session.wordDurationDate);
         }
