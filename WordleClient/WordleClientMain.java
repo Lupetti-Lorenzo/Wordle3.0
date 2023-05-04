@@ -69,21 +69,21 @@ public class WordleClientMain {
     // ritorno -1 se lo user vuole uscire, 0 se login effettuato, 1 se ho fatto registrazione
     private static int loginRegisterLoop() {
         // chiedo all'utente cosa vuole fare
-        System.out.print("1) Login\n2) Registrati\n3) Esci\nInserisci un valore tra login, registrazione e esci\n>");
+        System.out.print("1) Login\n2) Registrazione\n3) Esci\nInserisci un valore tra login, registrazione e esci\n>");
         String choice = " "; boolean loopDone = false;
         do { // loop fino a che l'utente non inserisce una scelta valida
             try {
                 choice = keyboard.readLine();
             } catch (IOException e) {exitApplication("lettura user input fallita");} // errore - chiudo applicazione
             if (!choice.equalsIgnoreCase("login") && !choice.equalsIgnoreCase("registrazione") && !choice.equalsIgnoreCase("esci")) { // scelta non valida
-                printWarning("Inserisci un valore tra login, registrati e esci. Hai inserito " + choice);
+                printWarning("Inserisci un valore tra login, registrazione e esci. Hai inserito " + choice);
             }
         } while (!choice.equalsIgnoreCase("login") && !choice.equalsIgnoreCase("registrazione") && !choice.equalsIgnoreCase("esci"));
         // scelta valida
         // mando la scelta al server e chiamo le rispettive funzioni
         switch (choice) {
             case "login" -> loopDone = login();
-            case "registrati" -> register();
+            case "registrazione" -> register();
             default -> { // exit
                 out.println("exit");
                 return -1; // ritorno -1 per uscire dal gioco

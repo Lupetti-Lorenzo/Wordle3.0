@@ -46,6 +46,7 @@ public class MulticastNotifyCollector extends Thread {
             ms.close();
         } catch (IOException e) {System.out.println("Errore all' interno del MNC: " + e.getMessage());}
     }
+    
     private static class MNCTerminationHandler extends Thread { // termination handler nel caso il client chiuda l'applicazione brutalmente
         private final MulticastSocket ms;
         private final InetSocketAddress ia;
