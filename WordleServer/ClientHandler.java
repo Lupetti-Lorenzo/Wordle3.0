@@ -1,4 +1,3 @@
-
 import java.io.*;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
@@ -11,6 +10,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ClientHandler implements Runnable {
     // mappa degli utenti registrati
     private final ConcurrentHashMap<String, UserData> usersMap;
+    // mappa degli utenti loggati
+    private final ConcurrentHashMap<String, Boolean> usersLogged;
     private final SecretWordSessionManager sessionManager; // per interagire con la parola segreta e quindi sapere se esiste, prendere gli hints...
     // CONNECTION DATA
     private final Socket socket;
@@ -22,9 +23,10 @@ public class ClientHandler implements Runnable {
     private UserData userData;
     private UserSession userSession;
 
-    public ClientHandler(Socket socket, ConcurrentHashMap<String, UserData> usersMap, SecretWordSessionManager wsManager, MulticastSocket ms) throws IOException {
+    public ClientHandler(Socket socket, ConcurrentHashMap<String, UserData> usersMap, ConcurrentHashMap<String, Boolean> usersLogged,SecretWordSessionManager wsManager, MulticastSocket ms) throws IOException {
         this.socket = socket;
         this.usersMap = usersMap;
+        this.usersLogged = usersLogged;
         this.sessionManager = wsManager;
         this.ms = ms;
         this.in  = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -183,7 +185,10 @@ public class ClientHandler implements Runnable {
         String password = readUserInput();
         if (password == null) return true; // errore - chiudi il thread
         if (this.userData != null)
-            err = 3; // gia loggato
+            err = 3; // gia loggato su questo dispositivo
+        else if (usersLogged.get(username) != null) {
+            err = 4; // gia loggato su un altro dispositivo
+        }
         else { // non loggato, faccio login
             this.userData = usersMap.get(username); // cerco lo user nella mappa
             if (userData == null) err = 1; // user non esiste
@@ -194,6 +199,8 @@ public class ClientHandler implements Runnable {
             else { // loggato con successo
                 // else err = 0 - tutto ok
                 System.out.println("[SERVER] Utente " + userData.username + " ha eseguito il login");
+                // aggiorno la mappa dei loggati
+                this.usersLogged.put(username, true);
                 out.println(err); // mando l'esito al client
                 out.println(username); // mando l'username al client solo se si e loggato
                 return false;
@@ -210,6 +217,8 @@ public class ClientHandler implements Runnable {
         System.out.println("[SERVER] Utente " + userData.username + " ha eseguito il logout");
         if (this.sessionManager.getUserSession(userData.username) != null && this.userSession != null && !this.userSession.hasFinished())
             sessionManager.removeUserSession(this.userData.username);
+        // aggiorno la mappa dei loggati
+        this.usersLogged.remove(this.userData.username);
         this.userData = null;
         this.userSession = null;
     }

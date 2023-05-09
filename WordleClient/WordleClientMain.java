@@ -69,14 +69,14 @@ public class WordleClientMain {
     // ritorno -1 se lo user vuole uscire, 0 se login effettuato, 1 se ho fatto registrazione
     private static int loginRegisterLoop() {
         // chiedo all'utente cosa vuole fare
-        System.out.print("1) Login\n2) Registrazione\n3) Esci\nInserisci un valore tra login, registrazione e esci\n>");
+        System.out.print("1) Login\n2) Registrati\n3) Esci\nInserisci un valore tra login, registrazione e esci\n>");
         String choice = " "; boolean loopDone = false;
         do { // loop fino a che l'utente non inserisce una scelta valida
             try {
                 choice = keyboard.readLine();
             } catch (IOException e) {exitApplication("lettura user input fallita");} // errore - chiudo applicazione
             if (!choice.equalsIgnoreCase("login") && !choice.equalsIgnoreCase("registrazione") && !choice.equalsIgnoreCase("esci")) { // scelta non valida
-                printWarning("Inserisci un valore tra login, registrazione e esci. Hai inserito " + choice);
+                printWarning("Inserisci un valore tra login, registrati e esci. Hai inserito " + choice);
             }
         } while (!choice.equalsIgnoreCase("login") && !choice.equalsIgnoreCase("registrazione") && !choice.equalsIgnoreCase("esci"));
         // scelta valida
@@ -304,6 +304,8 @@ public class WordleClientMain {
             printWarning("Password errata");
         else if (err == 3)
             printWarning("Sei gia loggato");
+        else if (err == 4)
+            printWarning("Sei gia loggato su un altro dispositivo");
         else if (err == 0){ // err = 0, mi sono loggato, aggiorno lo username
             try {
                 username = in.readLine();

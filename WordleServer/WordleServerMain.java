@@ -1,4 +1,3 @@
-
 import java.io.*;
 import java.net.MulticastSocket;
 import java.net.ServerSocket;
@@ -11,7 +10,8 @@ public class WordleServerMain {
     public static final String configFile = "./server.properties";
     // Hasmap contente i dati degli utenti che tengo nel file json
     public static ConcurrentHashMap<String, UserData> usersMap = new ConcurrentHashMap<>();
-
+    // Mappa contenente gli username che sono loggati, uso una mappa per efficienza, posso leggere se ce un utente e inserire/eliminare con costo costante
+    public static ConcurrentHashMap<String, Boolean> usersLogged = new ConcurrentHashMap<>();
     // Parametri di configurazione - porta sul quale il server sta in ascolto, indirizzo e porta del multicast e la durata di una parola segreta(in secondi)
     public static int SERVERPORT;
     public static int PORTAMULTICAST;
@@ -44,7 +44,7 @@ public class WordleServerMain {
             Runtime.getRuntime().addShutdownHook(new ServerTerminationHandler(2000, pool, server, wordSessionManager, ms));
             //loop di accettazione sulla threadpool
             while (true) {
-                pool.execute(new ClientHandler(server.accept(), usersMap, wordSessionManager, ms));
+                pool.execute(new ClientHandler(server.accept(), usersMap,usersLogged, wordSessionManager, ms));
                 System.out.println("[SERVER] Nuovo client arrivato");
             }
         } catch (IOException e) {
